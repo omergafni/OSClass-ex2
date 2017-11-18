@@ -1,0 +1,3 @@
+src_files/
+/root/OSCourse/ex2/input.txt
+/root/OSCourse/ex2/output.txt
