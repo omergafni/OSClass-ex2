@@ -10,7 +10,7 @@
 
 char *get_subdir_path(const char *src_path, const char *subdir_name);
 
-void write_results(FILE *file, char *name, int cmp_status);
+void write_results(char *name, int cmp_status);
 
 int main(int argc, char **argv){
 
@@ -125,6 +125,7 @@ int main(int argc, char **argv){
     fclose(output);
     closedir(dir);
     
+    printf("DONE!\n");
     return 0;
      
 }
