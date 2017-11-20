@@ -19,7 +19,6 @@ int main(int argc, char **argv){
     char    input_buffer[256], output_buffer[256], comp_output[256];
     char    src_dir_path[128], input_file_path[128], output_file_path[128];
     FILE    *cfg, *input, *output;
-    size_t  len = 0;
     char    *subdir_path;
     int     status, pipe1[2], pipe2[2];
 
@@ -58,13 +57,12 @@ int main(int argc, char **argv){
         if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
             continue;
 
-        if (entry->d_type == DT_DIR) { // we got a subdir!
+        if (entry->d_type == DT_DIR) { // we've got a subdir!
               
             subdir_path = get_subdir_path(src_dir_path, entry->d_name);
             subdir = opendir(subdir_path);
             assert(subdir);
            
-
             while ((subentry = readdir(subdir)) != NULL){
                  
                  pipe(pipe1); // TODO: errors
@@ -74,15 +72,22 @@ int main(int argc, char **argv){
                     continue;
                  
                  if (!fork()){ // compile
+                    close(1); // keep the console clean from gcc errors and TODO: redirect stdout to somewhere else
                     char *args[] = {"gcc", strcat(subdir_path, subentry->d_name), "-o", "comp.o", NULL};
                     execv("/usr/bin/gcc", args);
                     perror("compile");
                     exit(1);
                  }
-                 else
+                 else {
                     wait(&status);
-                 
-                 if (!fork()){ // run
+                    if (WEXITSTATUS(status) != 0) { // compilation error
+                        char *error = "compilation failed on ";
+                        perror(entry->d_name);
+                        write_results(entry->d_name, 1);
+                        continue;
+                    }
+                 }
+                 if (!fork()){ // run, if compile succeeded  
                     close(0);
                     dup(pipe1[0]);
                     close(1);
@@ -91,7 +96,7 @@ int main(int argc, char **argv){
                     perror("run");
                     exit(1);
                  }
-                 else {
+                 else { // get output and write it to a file
                     close(pipe1[0]); 
                     close(pipe2[1]);
                     write(pipe1[1], input_buffer, sizeof(input_buffer));
