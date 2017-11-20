@@ -12,6 +12,8 @@ char *get_subdir_path(const char *src_path, const char *subdir_name);
 
 void write_results(char *name, int cmp_status);
 
+char *get_compile_error_msg(const char *name);
+
 int main(int argc, char **argv){
 
     DIR     *dir, *subdir;
@@ -72,7 +74,7 @@ int main(int argc, char **argv){
                     continue;
                  
                  if (!fork()){ // compile
-                    close(1); // keep the console clean from gcc errors and TODO: redirect stdout to somewhere else
+                    close(2); // keep the console clean from gcc errors and TODO: redirect stderr to somewhere else
                     char *args[] = {"gcc", strcat(subdir_path, subentry->d_name), "-o", "comp.o", NULL};
                     execv("/usr/bin/gcc", args);
                     perror("compile");
@@ -80,9 +82,9 @@ int main(int argc, char **argv){
                  }
                  else {
                     wait(&status);
-                    if (WEXITSTATUS(status) != 0) { // compilation error
-                        char *error = "compilation failed on ";
-                        perror(entry->d_name);
+                    if (WEXITSTATUS(status) != 0) { // compilation error                    
+                        char *error = get_compile_error_msg(entry->d_name);
+                        perror(error);
                         write_results(entry->d_name, 1);
                         continue;
                     }
@@ -165,4 +167,14 @@ void write_results(char *name, int cmp_status){
     }
 
     free(result_line);
+}
+
+char *get_compile_error_msg(const char *name){
+
+    char *msg = "compilation error [";
+    char *error = (char*)malloc(sizeof(msg)+sizeof(name)+1);
+    strcpy(error, msg);
+    strcat(error, name);
+    strcat(error, "]");
+    return error;
 }
