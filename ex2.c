@@ -1,3 +1,11 @@
+/**
+ * This code performs compilation of a C-files directory and write the results into a file.
+ * You must provide a configuration file to the main() function and specifies three paths: C-files directory path, input and output text-files paths.
+ * Should any error occures during compilation, the main() function will print a short perror() message to the console, no gcc error will be printed,
+ * gcc's stderr may be redirected to any desired destination.  
+ * When 'DONE!' message is printed, a "results.csv" file is created, contains list of students grades.
+ * */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
